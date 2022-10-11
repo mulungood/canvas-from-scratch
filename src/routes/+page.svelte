@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { toKeyName } from 'is-hotkey'
+
 	const entities = [
 		{
 			_type: 'box',
@@ -50,7 +52,56 @@
 			entity.position.x,
 		)}px, ${normalizePosition(entity.position.y)}px)`
 	}
+
+	/**
+	 * Records keys being currently pressed for usage in user interactions.
+	 */
+	let keysPressed: Record<string, boolean> = {}
+
+	/**
+	 * Follows the browser's & Figma's patterns:
+	 *
+	 * - SHIFT + scroll = moving on the x-axis
+	 * - SPACE + scroll = moving on the y-axis
+	 * - CMD + scroll = zooming in and out (browser pattern)
+	 */
+	$: handleWheel = (event: WheelEvent) => {
+		if (event.shiftKey) {
+			const deltaXLog = Math.log(Math.abs(event.deltaX))
+			const directionX = event.deltaX < 0 ? 1 : -1
+			viewport.x = Math.min(
+				VIEWPORT_BOUNDS[1],
+				Math.max(viewport.x + deltaXLog * 30 * directionX, VIEWPORT_BOUNDS[0]),
+			)
+			return
+		}
+
+		const deltaYLog = Math.log(Math.abs(event.deltaY))
+		const directionY = event.deltaY < 0 ? 1 : -1
+
+		if (keysPressed[toKeyName('space')]) {
+			viewport.y = Math.min(
+				VIEWPORT_BOUNDS[1],
+				Math.max(viewport.y + deltaYLog * 30 * directionY, VIEWPORT_BOUNDS[0]),
+			)
+			return
+		}
+
+		if (keysPressed[toKeyName('mod')]) {
+			event.preventDefault()
+			viewport.zoom = Math.min(
+				ZOOM_BOUNDS[1],
+				Math.max(viewport.zoom + deltaYLog * 0.1 * directionY, ZOOM_BOUNDS[0]),
+			)
+			return
+		}
+	}
 </script>
+
+<svelte:window
+	on:keydown={(event) => (keysPressed[event.key.toLowerCase()] = true)}
+	on:keyup={(event) => (keysPressed[event.key.toLowerCase()] = false)}
+/>
 
 <main style="--zoom: {viewport.zoom};">
 	<form>
@@ -84,6 +135,7 @@
 		</label>
 	</form>
 	<div
+		on:wheel={handleWheel}
 		class="canvas"
 		style="width: {CANVAS_SIZE}px; height: {CANVAS_SIZE}px; transform: translate({normalizePosition(
 			viewport.x,
