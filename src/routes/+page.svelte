@@ -96,6 +96,40 @@
 			return
 		}
 	}
+
+	$: handleDrag = (event: DragEvent) => {
+		event.preventDefault()
+		if (
+			!event.dataTransfer?.getData('canvas/initial-mouse-pos') ||
+			!keysPressed[toKeyName('space')]
+		) {
+			return
+		}
+
+		try {
+			const initialMousePos = JSON.parse(
+				event.dataTransfer.getData('canvas/initial-mouse-pos'),
+			)
+			const delta = {
+				x: event.clientX - initialMousePos.x,
+				y: event.clientY - initialMousePos.y,
+			}
+			viewport.x = Math.min(
+				VIEWPORT_BOUNDS[1],
+				Math.max(
+					viewport.x + delta.x * viewport.zoom * 0.05,
+					VIEWPORT_BOUNDS[0],
+				),
+			)
+			viewport.y = Math.min(
+				VIEWPORT_BOUNDS[1],
+				Math.max(
+					viewport.y + delta.y * viewport.zoom * 0.05,
+					VIEWPORT_BOUNDS[0],
+				),
+			)
+		} catch {}
+	}
 </script>
 
 <svelte:window
@@ -103,7 +137,7 @@
 	on:keyup={(event) => (keysPressed[event.key.toLowerCase()] = false)}
 />
 
-<main style="--zoom: {viewport.zoom};">
+<main style="--zoom: {viewport.zoom};" on:dragover={handleDrag}>
 	<form>
 		<label>
 			x
@@ -135,7 +169,18 @@
 		</label>
 	</form>
 	<div
+		on:dragstart={(event) => {
+			if (!event.dataTransfer) return
+
+			event.dataTransfer.setData(
+				'canvas/initial-mouse-pos',
+				JSON.stringify({ x: event.clientX, y: event.clientY }),
+			)
+			event.dataTransfer.effectAllowed = 'none'
+		}}
+		draggable={true}
 		on:wheel={handleWheel}
+		data-panning={!!keysPressed[toKeyName('space')]}
 		class="canvas"
 		style="width: {CANVAS_SIZE}px; height: {CANVAS_SIZE}px; transform: translate({normalizePosition(
 			viewport.x,
@@ -172,6 +217,11 @@
 		position: absolute;
 		left: 0;
 		top: 0;
+	}
+
+	.canvas[data-panning='true'] {
+		/* If not !important, the browser will have the cursor flickering as we drag */
+		cursor: grab !important;
 	}
 
 	.box {
