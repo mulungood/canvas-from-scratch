@@ -97,38 +97,26 @@
 		}
 	}
 
-	$: handleDrag = (event: DragEvent) => {
-		event.preventDefault()
-		if (
-			!event.dataTransfer?.getData('canvas/initial-mouse-pos') ||
-			!keysPressed[toKeyName('space')]
-		) {
-			return
-		}
+	let panning = false
+	$: handlePointerMove = (event: PointerEvent) => {
+		if (!panning) return
 
-		try {
-			const initialMousePos = JSON.parse(
-				event.dataTransfer.getData('canvas/initial-mouse-pos'),
-			)
-			const delta = {
-				x: event.clientX - initialMousePos.x,
-				y: event.clientY - initialMousePos.y,
-			}
-			viewport.x = Math.min(
-				VIEWPORT_BOUNDS[1],
-				Math.max(
-					viewport.x + delta.x * viewport.zoom * 0.05,
-					VIEWPORT_BOUNDS[0],
-				),
-			)
-			viewport.y = Math.min(
-				VIEWPORT_BOUNDS[1],
-				Math.max(
-					viewport.y + delta.y * viewport.zoom * 0.05,
-					VIEWPORT_BOUNDS[0],
-				),
-			)
-		} catch {}
+		const SPEED_FACTOR = 2
+		// Move the canvas in the opposite direction of the mouse (* -1)
+		// Faster movement when zoomed-out (zoom < 1)
+		// Log to smooth out the difference
+		const delta = {
+			x: (event.movementX * -1 * SPEED_FACTOR) / (Math.log(viewport.zoom) + 1),
+			y: (event.movementY * -1 * SPEED_FACTOR) / (Math.log(viewport.zoom) + 1),
+		}
+		viewport.x = Math.min(
+			VIEWPORT_BOUNDS[1],
+			Math.max(viewport.x + delta.x, VIEWPORT_BOUNDS[0]),
+		)
+		viewport.y = Math.min(
+			VIEWPORT_BOUNDS[1],
+			Math.max(viewport.y + delta.y, VIEWPORT_BOUNDS[0]),
+		)
 	}
 </script>
 
@@ -137,7 +125,25 @@
 	on:keyup={(event) => (keysPressed[event.key.toLowerCase()] = false)}
 />
 
-<main style="--zoom: {viewport.zoom};" on:dragover={handleDrag}>
+<main
+	style="--zoom: {viewport.zoom};"
+	on:pointermove={handlePointerMove}
+	on:pointerdown={(event) => {
+		if (!keysPressed[toKeyName('space')]) {
+			return
+		}
+
+		// Only start panning on left-click
+		if (event.pointerType === 'mouse' && event.button === 0) {
+			panning = true
+		}
+
+		// @TODO: mobile
+	}}
+	on:pointerup={() => {
+		panning = false
+	}}
+>
 	<form>
 		<label>
 			x
@@ -169,18 +175,8 @@
 		</label>
 	</form>
 	<div
-		on:dragstart={(event) => {
-			if (!event.dataTransfer) return
-
-			event.dataTransfer.setData(
-				'canvas/initial-mouse-pos',
-				JSON.stringify({ x: event.clientX, y: event.clientY }),
-			)
-			event.dataTransfer.effectAllowed = 'none'
-		}}
-		draggable={true}
 		on:wheel={handleWheel}
-		data-panning={!!keysPressed[toKeyName('space')]}
+		data-panneable={!!keysPressed[toKeyName('space')]}
 		class="canvas"
 		style="width: {CANVAS_SIZE}px; height: {CANVAS_SIZE}px; transform: translate({normalizePosition(
 			viewport.x,
@@ -192,6 +188,7 @@
 				style="width: {entity.width}px; height: {entity.height}px; transform: {getEntityTransform(
 					entity,
 				)}"
+				draggable="false"
 			/>
 		{/each}
 	</div>
@@ -204,7 +201,7 @@
 		background-size: var(--bg-size) var(--bg-size);
 		background-image: radial-gradient(
 			circle,
-			/* lighter background on higher zoom levels */
+			/* lighter background on zoom-out (zoom < 1) */
 				rgba(191, 191, 191, var(--zoom)) 1px,
 			rgba(0, 0, 0, 0) 1px
 		);
@@ -219,7 +216,7 @@
 		top: 0;
 	}
 
-	.canvas[data-panning='true'] {
+	.canvas[data-panneable='true'] {
 		/* If not !important, the browser will have the cursor flickering as we drag */
 		cursor: grab !important;
 	}
