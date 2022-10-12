@@ -3,6 +3,7 @@
 
 	const entities = [
 		{
+			_id: 'box-1',
 			_type: 'box',
 			width: 400,
 			height: 400,
@@ -12,6 +13,7 @@
 			},
 		},
 		{
+			_id: 'box-2',
 			_type: 'box',
 			width: 200,
 			height: 400,
@@ -21,6 +23,7 @@
 			},
 		},
 		{
+			_id: 'box-3',
 			_type: 'box',
 			width: 400,
 			height: 200,
@@ -97,26 +100,52 @@
 		}
 	}
 
-	let panning = false
+	let leftMouseDown = false
+	let selection: string[] = []
+	let selectionBox:
+		| undefined
+		| { initial: { x: number; y: number }; current: { x: number; y: number } } =
+		undefined
 	$: handlePointerMove = (event: PointerEvent) => {
-		if (!panning) return
+		if (!leftMouseDown) return
 
-		const SPEED_FACTOR = 2
-		// Move the canvas in the opposite direction of the mouse (* -1)
-		// Faster movement when zoomed-out (zoom < 1)
-		// Log to smooth out the difference
-		const delta = {
-			x: (event.movementX * -1 * SPEED_FACTOR) / (Math.log(viewport.zoom) + 1),
-			y: (event.movementY * -1 * SPEED_FACTOR) / (Math.log(viewport.zoom) + 1),
+		if (keysPressed[toKeyName('space')]) {
+			const SPEED_FACTOR = 2
+			// Move the canvas in the opposite direction of the mouse (* -1)
+			// Faster movement when zoomed-out (zoom < 1)
+			// Log to smooth out the difference
+			const delta = {
+				x:
+					(event.movementX * -1 * SPEED_FACTOR) / (Math.log(viewport.zoom) + 1),
+				y:
+					(event.movementY * -1 * SPEED_FACTOR) / (Math.log(viewport.zoom) + 1),
+			}
+			viewport.x = Math.min(
+				VIEWPORT_BOUNDS[1],
+				Math.max(viewport.x + delta.x, VIEWPORT_BOUNDS[0]),
+			)
+			viewport.y = Math.min(
+				VIEWPORT_BOUNDS[1],
+				Math.max(viewport.y + delta.y, VIEWPORT_BOUNDS[0]),
+			)
+		} else {
+			if (!selectionBox) {
+				selectionBox = {
+					initial: {
+						x: event.clientX,
+						y: event.clientY,
+					},
+					current: {
+						x: event.clientX,
+						y: event.clientY,
+					},
+				}
+			}
+			selectionBox.current = {
+				x: event.clientX,
+				y: event.clientY,
+			}
 		}
-		viewport.x = Math.min(
-			VIEWPORT_BOUNDS[1],
-			Math.max(viewport.x + delta.x, VIEWPORT_BOUNDS[0]),
-		)
-		viewport.y = Math.min(
-			VIEWPORT_BOUNDS[1],
-			Math.max(viewport.y + delta.y, VIEWPORT_BOUNDS[0]),
-		)
 	}
 </script>
 
@@ -129,19 +158,17 @@
 	style="--zoom: {viewport.zoom};"
 	on:pointermove={handlePointerMove}
 	on:pointerdown={(event) => {
-		if (!keysPressed[toKeyName('space')]) {
-			return
-		}
-
 		// Only start panning on left-click
 		if (event.pointerType === 'mouse' && event.button === 0) {
-			panning = true
+			leftMouseDown = true
 		}
 
 		// @TODO: mobile
 	}}
 	on:pointerup={() => {
-		panning = false
+		leftMouseDown = false
+		// Next-up: finding entities under the selection box
+		selectionBox = undefined
 	}}
 >
 	<form>
@@ -182,6 +209,20 @@
 			viewport.x,
 		) * -1}px, {normalizePosition(viewport.y) * -1}px) scale({viewport.zoom});"
 	>
+		{#if selectionBox}
+			<div
+				class="selectionBox"
+				style="width: {Math.abs(
+					selectionBox.initial.x - selectionBox.current.x,
+				)}px; height: {Math.abs(
+					selectionBox.initial.y - selectionBox.current.y,
+				)}px; transform: translate({normalizePosition(
+					Math.min(selectionBox.initial.x, selectionBox.current.x),
+				)}px, {normalizePosition(
+					Math.min(selectionBox.initial.y, selectionBox.current.y),
+				)}px)"
+			/>
+		{/if}
 		{#each entities as entity}
 			<div
 				class="box"
@@ -210,7 +251,8 @@
 	}
 
 	.canvas,
-	.box {
+	.box,
+	.selectionBox {
 		position: absolute;
 		left: 0;
 		top: 0;
@@ -223,6 +265,12 @@
 
 	.box {
 		background: #ececec;
+	}
+
+	.selectionBox {
+		background: rgba(71, 125, 252, 0.15);
+		border: 1px solid rgba(71, 125, 252, 1);
+		z-index: 10;
 	}
 
 	form {
