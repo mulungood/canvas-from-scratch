@@ -129,22 +129,17 @@
 				Math.max(viewport.y + delta.y, VIEWPORT_BOUNDS[0]),
 			)
 		} else {
+			const cursorPosition = {
+				x: event.clientX + viewport.x,
+				y: event.clientY + viewport.y,
+			}
 			if (!selectionBox) {
 				selectionBox = {
-					initial: {
-						x: event.clientX,
-						y: event.clientY,
-					},
-					current: {
-						x: event.clientX,
-						y: event.clientY,
-					},
+					initial: cursorPosition,
+					current: cursorPosition,
 				}
 			}
-			selectionBox.current = {
-				x: event.clientX,
-				y: event.clientY,
-			}
+			selectionBox.current = cursorPosition
 		}
 	}
 </script>
@@ -167,7 +162,6 @@
 	}}
 	on:pointerup={() => {
 		leftMouseDown = false
-		// Next-up: finding entities under the selection box
 		selectionBox = undefined
 	}}
 >
