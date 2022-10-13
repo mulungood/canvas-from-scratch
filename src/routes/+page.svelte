@@ -7,30 +7,24 @@
 			_type: 'box',
 			width: 400,
 			height: 400,
-			position: {
-				x: 50,
-				y: 50,
-			},
+			x: 50,
+			y: 50,
 		},
 		{
 			_id: 'box-2',
 			_type: 'box',
 			width: 200,
 			height: 400,
-			position: {
-				x: 500,
-				y: 50,
-			},
+			x: 500,
+			y: 50,
 		},
 		{
 			_id: 'box-3',
 			_type: 'box',
 			width: 400,
 			height: 200,
-			position: {
-				x: 500,
-				y: 500,
-			},
+			x: 500,
+			y: 500,
 		},
 	]
 
@@ -48,12 +42,6 @@
 	// From 0-based positions to final position in viewport
 	function normalizePosition(pos: number) {
 		return pos + CANVAS_SIZE / 2
-	}
-
-	function getEntityTransform(entity: typeof entities[0]) {
-		return `translate(${normalizePosition(
-			entity.position.x,
-		)}px, ${normalizePosition(entity.position.y)}px)`
 	}
 
 	/**
@@ -104,8 +92,10 @@
 	let selection: string[] = []
 	let selectionBox:
 		| undefined
-		| { initial: { x: number; y: number }; current: { x: number; y: number } } =
-		undefined
+		| {
+				initial: { x: number; y: number }
+				current: { x: number; y: number }
+		  } = undefined
 	$: handlePointerMove = (event: PointerEvent) => {
 		if (!leftMouseDown) return
 
@@ -139,7 +129,6 @@
 					current: cursorPosition,
 				}
 			}
-			selectionBox.current = cursorPosition
 		}
 	}
 </script>
@@ -220,9 +209,9 @@
 		{#each entities as entity}
 			<div
 				class="box"
-				style="width: {entity.width}px; height: {entity.height}px; transform: {getEntityTransform(
-					entity,
-				)}"
+				style="width: {entity.width}px; height: {entity.height}px; transform: translate({normalizePosition(
+					entity.x,
+				)}px, {normalizePosition(entity.y)}px)"
 				draggable="false"
 			/>
 		{/each}
