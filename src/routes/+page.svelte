@@ -95,6 +95,7 @@
 		| {
 				initial: { x: number; y: number }
 				current: { x: number; y: number }
+				entitiesInBounds: string[]
 		  } = undefined
 	$: handlePointerMove = (event: PointerEvent) => {
 		if (!leftMouseDown) return
@@ -127,8 +128,40 @@
 				selectionBox = {
 					initial: cursorPosition,
 					current: cursorPosition,
+					entitiesInBounds: [],
 				}
 			}
+			selectionBox.current = cursorPosition
+
+			const selectionBbox = {
+				minX: Math.min(selectionBox.initial.x, selectionBox.current.x),
+				maxX: Math.max(selectionBox.initial.x, selectionBox.current.x),
+				minY: Math.min(selectionBox.initial.y, selectionBox.current.y),
+				maxY: Math.max(selectionBox.initial.y, selectionBox.current.y),
+			}
+			selectionBox.entitiesInBounds = entities.reduce((ids, entity) => {
+				const entityBbox = {
+					minX: entity.x,
+					maxX: entity.x + entity.width,
+					minY: entity.y,
+					maxY: entity.y + entity.height,
+				}
+				if (
+					// === X-axis ===
+					// left-side to the left of the selection's right-side
+					entityBbox.minX < selectionBbox.maxX &&
+					// right-side to the right of the selection's left-side
+					entityBbox.maxX > selectionBbox.minX &&
+					// === Y-axis ===
+					// top-side above selection's bottom-side
+					entityBbox.minY < selectionBbox.maxY &&
+					// bottom-side below selection's top-side
+					entityBbox.maxY > selectionBbox.minY
+				) {
+					return [...ids, entity._id]
+				}
+				return ids
+			}, [] as string[])
 		}
 	}
 </script>
@@ -149,8 +182,25 @@
 
 		// @TODO: mobile
 	}}
+	on:pointercancel={() => {
+		console.info('CANCEL')
+	}}
+	on:lostpointercapture={() => {
+		console.info('lostpointercapture')
+	}}
+	on:pointerleave={() => {
+		// @TODO: how to cancel selection when pointer is outside of the screen?
+		console.info('pointerleave')
+		selectionBox = undefined
+	}}
 	on:pointerup={() => {
 		leftMouseDown = false
+		if (!selectionBox) return
+
+		selection = keysPressed[toKeyName('shift')]
+			? [...(selection || []), ...selectionBox.entitiesInBounds]
+			: selectionBox.entitiesInBounds
+		console.log({ selection, selectionBox })
 		selectionBox = undefined
 	}}
 >
@@ -213,6 +263,10 @@
 					entity.x,
 				)}px, {normalizePosition(entity.y)}px)"
 				draggable="false"
+				data-selected={selection.includes(entity._id)}
+				data-being-selected={selectionBox?.entitiesInBounds.includes(
+					entity._id,
+				)}
 			/>
 		{/each}
 	</div>
@@ -248,6 +302,14 @@
 
 	.box {
 		background: #ececec;
+	}
+
+	.box[data-being-selected='true'] {
+		border: 1px solid rgba(71, 125, 252, 1);
+	}
+
+	.box[data-selected='true'] {
+		border: 2px solid rgba(71, 125, 252, 1);
 	}
 
 	.selectionBox {
