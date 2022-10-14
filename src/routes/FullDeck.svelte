@@ -1,37 +1,22 @@
 <script>
 	export let entity
-
-	const cardName = entity.cardFilename.replace(/\d/g, '').trim().split('.')[0]
 </script>
 
 <button
 	on:click|stopPropagation={() => {
-		entity.side = entity.side === 'front' ? 'back' : 'front'
+		entity.curCard += 1
+		entity.curCard %= entity.cardImages.length - 1
 	}}
-	style="--card-width: {entity.width}px"
 >
-	<div class="card" data-active={entity.side === 'front'}>
-		<img
-			src="/nagle-arcana/{entity.cardFilename}"
-			alt="{cardName}'s front"
-			data-front
-		/>
-		<h2>{cardName}</h2>
-	</div>
-	<div class="card" data-active={entity.side === 'back'}>
-		<img src={'/card-back.png'} alt="Card back" data-front />
-	</div>
+	{#each entity.cardImages as fileName, idx}
+		<div class="card" data-active={entity.curCard === idx}>
+			<img src="/nagle-arcana/{fileName}" alt={fileName} />
+			<h2>{fileName.replace(/\d/g, '').trim().split('.')[0]}</h2>
+		</div>
+	{/each}
 </button>
 
 <style>
-	@keyframes slideIn {
-		0% {
-			transform: translateX(calc(var(--card-width) * -1));
-		}
-		100% {
-			transform: translateX(0);
-		}
-	}
 	button {
 		width: 100%;
 		height: 100%;
@@ -40,7 +25,6 @@
 		background-color: transparent;
 		border: none;
 		cursor: pointer;
-		animation: slideIn 1.25s cubic-bezier(0, 0, 0.37, 0.98) forwards;
 	}
 
 	.card {

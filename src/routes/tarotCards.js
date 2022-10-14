@@ -24,29 +24,37 @@ const cardNames = [
 ]
 
 export const tarotCards = [
-	...cardNames.flatMap((card, idx, arr) => {
-		if (idx % 2 === 0) return []
-		return [
-			{
-				y: 0,
-				x: 0 + 20 * idx + 512 * (idx + 1),
-				width: 512,
-				height: 768,
-				_id: card,
-				_type: 'tarotCard',
-				front: `/nagle-arcana/${card}`,
-				back: `/nagle-arcana/${arr[idx + 1]}`,
-			},
-		]
-	}),
+	// ...cardNames.map((card, idx) => {
+	// 	return {
+	// 		y: 0,
+	// 		x: 0 + 20 * idx + 512 * (idx + 1),
+	// 		width: 512,
+	// 		height: 768,
+	// 		_id: card,
+	// 		_type: 'tarotCard',
+	// 		cardFilename: card,
+	// 		side: 'back',
+	// 	}
+	// }),
 	{
-		_type: 'tarotDeck',
-		y: 800,
+		_type: 'fullDeck',
+		y: -1000,
 		x: 0,
 		width: 512,
 		height: 768,
+		_id: 'nagleArcanaFull',
+		cardImages: cardNames,
+		curCard: 0,
+	},
+	{
+		_type: 'tarotDeck',
+		y: 100,
+		x: 100,
+		width: 512,
+		height: 768,
 		_id: 'nagleArcana',
-		cardsImages: cardNames,
+		cardImages: cardNames,
+		addedCards: [],
 		curCard: 0,
 	},
 ]

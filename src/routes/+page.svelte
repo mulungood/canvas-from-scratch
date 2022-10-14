@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { toKeyName } from 'is-hotkey'
+	import FullDeck from './FullDeck.svelte'
 	import TarotCard from './TarotCard.svelte'
 	import { tarotCards } from './tarotCards'
 	import TarotDeck from './TarotDeck.svelte'
@@ -143,6 +144,10 @@
 			}, [] as string[])
 		}
 	}
+
+	function addEntity(newEntity) {
+		entities = [newEntity, ...entities]
+	}
 </script>
 
 <svelte:window
@@ -233,7 +238,7 @@
 				)}px)"
 			/>
 		{/if}
-		{#each entities as entity}
+		{#each entities as entity (entity._id)}
 			<button
 				class="box"
 				style="width: {entity.width}px; height: {entity.height}px; transform: translate({normalizePosition(
@@ -270,7 +275,10 @@
 					<TarotCard {entity} />
 				{/if}
 				{#if entity._type === 'tarotDeck'}
-					<TarotDeck {entity} />
+					<TarotDeck {addEntity} deck={entity} />
+				{/if}
+				{#if entity._type === 'fullDeck'}
+					<FullDeck {entity} />
 				{/if}
 			</button>
 		{/each}

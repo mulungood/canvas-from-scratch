@@ -1,20 +1,35 @@
 <script>
-	export let entity
+	export let deck
+	export let addEntity
 </script>
 
 <button
 	on:click|stopPropagation={() => {
-		entity.curCard += 1
-		entity.curCard %= entity.cardsImages.length - 1
+		const newCard = {
+			width: deck.width * 0.8,
+			height: deck.height * 0.8,
+			// Use the deck's height
+			y: deck.y + (deck.height * 0.2) / 2,
+			// And 100px to the right
+			x:
+				deck.x +
+				deck.width +
+				100 +
+				deck.width * 0.8 * deck.addedCards.length +
+				(40 * deck.addedCards.length - 1),
+			_id: `${Math.random().toString()}`,
+			_type: 'tarotCard',
+			cardFilename: deck.cardImages[0],
+			side: 'back',
+		}
+		addEntity(newCard)
+		deck.addedCards.push(newCard)
+		deck.cardImages = deck.cardImages.slice(1)
 	}}
-	data-side={entity.side}
 >
-	{#each entity.cardsImages as fileName, idx}
-		<div class="card" data-active={entity.curCard === idx}>
-			<img src="/nagle-arcana/{fileName}" alt={fileName} />
-			<h2>{fileName.replace(/\d/g, '').trim().split('.')[0]}</h2>
-		</div>
-	{/each}
+	{#if deck.cardImages.length > 0}
+		<img src={'/card-back.png'} alt="Card back" data-front />
+	{/if}
 </button>
 
 <style>
@@ -28,28 +43,11 @@
 		cursor: pointer;
 	}
 
-	.card {
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		user-select: none;
-		position: absolute;
-		backface-visibility: hidden;
-		transition: transform 0.55s ease-out;
-		transform-style: preserve-3d;
-		transform-origin: center right;
-	}
-
 	img {
 		width: 100%;
 		height: 100%;
 		display: block;
 		object-fit: cover;
 		user-select: none;
-	}
-
-	.card[data-active='false'] {
-		transform: translateX(-100%) rotateY(-180deg);
 	}
 </style>
