@@ -257,7 +257,7 @@
 			/>
 		{/if}
 		{#each entities as entity}
-			<div
+			<button
 				class="box"
 				style="width: {entity.width}px; height: {entity.height}px; transform: translate({normalizePosition(
 					entity.x,
@@ -267,13 +267,30 @@
 				data-being-selected={selectionBox?.entitiesInBounds.includes(
 					entity._id,
 				)}
-			/>
+				on:click|stopPropagation={() => {
+					// If entity already selected and CTRL/CMD is pressed, un-select it
+					if (selection.includes(entity._id) && keysPressed[toKeyName('mod')]) {
+						selection = selection.filter((id) => id !== entity._id)
+					} else {
+						// If not selected yet,
+						selection = keysPressed[toKeyName('mod')]
+							? // Add to selection if CTRL/CMD is pressed
+							  [...selection, entity._id]
+							: // Or set it as the sole selection if otherwise
+							  [entity._id]
+					}
+				}}
+			>
+				<span class="sr-only">Select box ({entity._id})</span>
+			</button>
 		{/each}
 	</div>
 </main>
 
 <style>
 	main {
+		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+			Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 		position: relative;
 		--bg-size: calc(var(--zoom) * 60px);
 		background-size: var(--bg-size) var(--bg-size);
@@ -285,6 +302,11 @@
 		);
 		height: 100vh;
 		overflow: hidden;
+	}
+
+	* {
+		font-family: inherit;
+		font-size: inherit;
 	}
 
 	.canvas,
@@ -301,15 +323,17 @@
 	}
 
 	.box {
-		background: #ececec;
+		background: #f1f1f1;
+		border: 2px solid rgb(222, 222, 222);
+		transition: 0.075s ease-out border-color;
 	}
 
 	.box[data-being-selected='true'] {
-		border: 1px solid rgba(71, 125, 252, 1);
+		border-color: rgba(71, 125, 252, 0.5);
 	}
 
 	.box[data-selected='true'] {
-		border: 2px solid rgba(71, 125, 252, 1);
+		border-color: rgba(71, 125, 252, 1);
 	}
 
 	.selectionBox {
@@ -324,5 +348,17 @@
 		bottom: 0;
 		background-color: white;
 		z-index: 50;
+	}
+
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border-width: 0;
 	}
 </style>
