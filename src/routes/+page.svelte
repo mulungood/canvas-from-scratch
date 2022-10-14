@@ -82,11 +82,12 @@
 			// Move the canvas in the opposite direction of the mouse (* -1)
 			// Faster movement when zoomed-out (zoom < 1)
 			// Log to smooth out the difference
+			console.log({ zoom: viewport.zoom, log: Math.log(viewport.zoom) + 2 })
 			const delta = {
 				x:
-					(event.movementX * -1 * SPEED_FACTOR) / (Math.log(viewport.zoom) + 1),
+					(event.movementX * -1 * SPEED_FACTOR) / (Math.log(viewport.zoom) + 2),
 				y:
-					(event.movementY * -1 * SPEED_FACTOR) / (Math.log(viewport.zoom) + 1),
+					(event.movementY * -1 * SPEED_FACTOR) / (Math.log(viewport.zoom) + 2),
 			}
 			viewport.x = Math.min(
 				VIEWPORT_BOUNDS[1],

@@ -21,14 +21,7 @@
 		user-select: none;
 		background-color: transparent;
 		border: none;
-	}
-
-	button[data-status='flipping'] {
-		transform: rotate3D(0, 0, 1);
-
-		transition: transform 1s;
-		transform-origin: center right;
-		transform-style: preserve-3d;
+		cursor: pointer;
 	}
 
 	img {
