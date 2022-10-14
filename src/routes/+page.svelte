@@ -2,6 +2,7 @@
 	import { toKeyName } from 'is-hotkey'
 	import TarotCard from './TarotCard.svelte'
 	import { tarotCards } from './tarotCards'
+	import TarotDeck from './TarotDeck.svelte'
 
 	let entities = tarotCards
 
@@ -267,6 +268,9 @@
 				<span class="sr-only">Select box ({entity._id})</span>
 				{#if entity._type === 'tarotCard'}
 					<TarotCard {entity} />
+				{/if}
+				{#if entity._type === 'tarotDeck'}
+					<TarotDeck {entity} />
 				{/if}
 			</button>
 		{/each}
