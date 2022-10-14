@@ -267,6 +267,9 @@
 					entity._id,
 				)}
 				on:click|stopPropagation={() => {
+					if (keysPressed[toKeyName('space')]) {
+						return
+					}
 					// If entity already selected and CTRL/CMD is pressed, un-select it
 					if (selection.includes(entity._id) && keysPressed[toKeyName('mod')]) {
 						selection = selection.filter((id) => id !== entity._id)
@@ -330,6 +333,7 @@
 		background: #f1f1f1;
 		border: 2px solid rgb(222, 222, 222);
 		transition: 0.075s ease-out border-color;
+		cursor: inherit;
 	}
 
 	.box[data-being-selected='true'] {
