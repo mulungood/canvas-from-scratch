@@ -1,32 +1,9 @@
 <script lang="ts">
 	import { toKeyName } from 'is-hotkey'
+	import TarotCard from './TarotCard.svelte'
+	import { tarotCards } from './tarotCards'
 
-	const entities = [
-		{
-			_id: 'box-1',
-			_type: 'box',
-			width: 400,
-			height: 400,
-			x: 50,
-			y: 50,
-		},
-		{
-			_id: 'box-2',
-			_type: 'box',
-			width: 200,
-			height: 400,
-			x: 500,
-			y: 50,
-		},
-		{
-			_id: 'box-3',
-			_type: 'box',
-			width: 400,
-			height: 200,
-			x: 500,
-			y: 500,
-		},
-	]
+	let entities = tarotCards
 
 	// Huge canvas to allow for moving to the top-left
 	const CANVAS_SIZE = 10000
@@ -287,6 +264,9 @@
 				}}
 			>
 				<span class="sr-only">Select box ({entity._id})</span>
+				{#if entity._type === 'tarotCard'}
+					<TarotCard {entity} />
+				{/if}
 			</button>
 		{/each}
 	</div>
@@ -333,18 +313,27 @@
 	}
 
 	.box {
-		background: #f1f1f1;
-		border: 2px solid rgb(222, 222, 222);
+		/* background: #f1f1f1; */
+		/* border: 2px solid rgb(222, 222, 222); */
 		transition: 0.075s ease-out border-color;
 		cursor: inherit;
+		user-select: none;
+		perspective: 100px;
+		padding: 0;
+		border: none;
+		background-color: transparent;
+	}
+
+	button {
+		padding: 0;
 	}
 
 	.box[data-being-selected='true'] {
-		border-color: rgba(71, 125, 252, 0.5);
+		/* border-color: rgba(71, 125, 252, 0.5); */
 	}
 
 	.box[data-selected='true'] {
-		border-color: rgba(71, 125, 252, 1);
+		/* border-color: rgba(71, 125, 252, 1); */
 	}
 
 	.selectionBox {
