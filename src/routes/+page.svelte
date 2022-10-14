@@ -199,7 +199,6 @@
 		selection = keysPressed[toKeyName('shift')]
 			? [...(selection || []), ...selectionBox.entitiesInBounds]
 			: selectionBox.entitiesInBounds
-		console.log({ selection, selectionBox })
 		selectionBox = undefined
 	}}
 >
@@ -267,16 +266,20 @@
 					entity._id,
 				)}
 				on:click|stopPropagation={() => {
+					// Don't select when panning
 					if (keysPressed[toKeyName('space')]) {
 						return
 					}
-					// If entity already selected and CTRL/CMD is pressed, un-select it
-					if (selection.includes(entity._id) && keysPressed[toKeyName('mod')]) {
+					// If entity already selected and SHIFT is pressed, un-select it
+					if (
+						selection.includes(entity._id) &&
+						keysPressed[toKeyName('shift')]
+					) {
 						selection = selection.filter((id) => id !== entity._id)
 					} else {
 						// If not selected yet,
-						selection = keysPressed[toKeyName('mod')]
-							? // Add to selection if CTRL/CMD is pressed
+						selection = keysPressed[toKeyName('shift')]
+							? // Add to selection if SHIFT is pressed
 							  [...selection, entity._id]
 							: // Or set it as the sole selection if otherwise
 							  [entity._id]
