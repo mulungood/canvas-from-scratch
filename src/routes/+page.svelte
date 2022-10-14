@@ -173,6 +173,11 @@
 
 <main
 	style="--zoom: {viewport.zoom};"
+	data-pan-state={keysPressed[toKeyName('space')]
+		? leftMouseDown
+			? 'panning'
+			: 'panneable'
+		: 'none'}
 	on:pointermove={handlePointerMove}
 	on:pointerdown={(event) => {
 		// Only start panning on left-click
@@ -181,12 +186,6 @@
 		}
 
 		// @TODO: mobile
-	}}
-	on:pointercancel={() => {
-		console.info('CANCEL')
-	}}
-	on:lostpointercapture={() => {
-		console.info('lostpointercapture')
 	}}
 	on:pointerleave={() => {
 		// @TODO: how to cancel selection when pointer is outside of the screen?
@@ -304,6 +303,16 @@
 		overflow: hidden;
 	}
 
+	main[data-pan-state='panneable'] {
+		/* If not !important, the browser will have the cursor flickering as we drag */
+		cursor: grab !important;
+	}
+
+	main[data-pan-state='panning'] {
+		/* If not !important, the browser will have the cursor flickering as we drag */
+		cursor: grabbing !important;
+	}
+
 	* {
 		font-family: inherit;
 		font-size: inherit;
@@ -315,11 +324,6 @@
 		position: absolute;
 		left: 0;
 		top: 0;
-	}
-
-	.canvas[data-panneable='true'] {
-		/* If not !important, the browser will have the cursor flickering as we drag */
-		cursor: grab !important;
 	}
 
 	.box {
